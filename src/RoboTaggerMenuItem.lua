@@ -71,32 +71,29 @@ end
 
 --------------------------------------------------------------------------------
 
-local function selectPhoto( propertyTable, newIndex )
-	logger:tracef( "selecting photo %d of %d", newIndex, #propertyTable[ propPhotos ] )
-
-	local oldIndex = propertyTable[ propCurrentPhotoIndex ]
-	if oldIndex ~= newIndex then
-		-- save label & landmark selections, if any
-		local photo = propertyTable[ propPhotos ][ oldIndex ]
-		if photo ~= nil then
-			logger:tracef( "saving label selections" )
-			local labels = photo.labels or { }
-			for i, label in ipairs( labels ) do
-				label.selected = propertyTable[ propLabelSelected( i ) ]
-			end
-			photo.labelThreshold = propertyTable[ propLabelThreshold ]
-
-			logger:tracef( "saving landmark selections" )
-			local landmarks = photo.landmarks or { }
-			for i, landmark in ipairs( landmarks ) do
-				landmark.selected = propertyTable[ propLandmarkSelected( i ) ]
-			end
-			photo.landmarkThreshold = propertyTable[ propLandmarkThreshold ]
+-- save photo from propertyTable[ propXXX ] to propertyTable.photos[ i ]
+local function savePhoto( propertyTable, index )
+	local photo = propertyTable[ propPhotos ][ index ]
+	if photo ~= nil then
+		logger:tracef( "saving label selections" )
+		local labels = photo.labels or { }
+		for i, label in ipairs( labels ) do
+			label.selected = propertyTable[ propLabelSelected( i ) ]
 		end
-	end
+		photo.labelThreshold = propertyTable[ propLabelThreshold ]
 
-	propertyTable[ propCurrentPhotoIndex ] = newIndex
-	local photo = propertyTable[ propPhotos ][ newIndex ]
+		logger:tracef( "saving landmark selections" )
+		local landmarks = photo.landmarks or { }
+		for i, landmark in ipairs( landmarks ) do
+			landmark.selected = propertyTable[ propLandmarkSelected( i ) ]
+		end
+		photo.landmarkThreshold = propertyTable[ propLandmarkThreshold ]
+	end
+end
+
+-- load photo from propertyTable.photos[ i ] to propertyTable[ propXXX ]
+local function loadPhoto( propertyTable, index )
+	local photo = propertyTable[ propPhotos ][ index ]
 	assert( photo ~= nil )
 
 	local labels = photo.labels or { }
@@ -121,6 +118,20 @@ local function selectPhoto( propertyTable, newIndex )
 	propertyTable[ propLandmarkThreshold ] = photo.landmarkThreshold
 end
 
+-- select photo (i.e. move from index X to Y)
+local function selectPhoto( propertyTable, newIndex )
+	logger:tracef( "selecting photo %d of %d", newIndex, #propertyTable[ propPhotos ] )
+
+	local oldIndex = propertyTable[ propCurrentPhotoIndex ]
+	if oldIndex ~= newIndex then
+		savePhoto( propertyTable, oldIndex )
+	end
+
+	loadPhoto( propertyTable, newIndex )
+	propertyTable[ propCurrentPhotoIndex ] = newIndex
+end
+
+-- apply the selected labels and landmarks to the photo
 local function applyKeywordsToPhoto( photo, labels, landmarks )
 	local catalog = photo.catalog
 	catalog:withWriteAccessDo(
@@ -478,7 +489,7 @@ local function showResponse( propertyTable )
 					transform = function( value, fromTable )
 						local numPhotos = #value
 						local remPhotos = propertyTable[ propTotalPhotos ] - numPhotos
-						local consumedTime = propertyTable[ propConsumedTime ] 
+						local consumedTime = propertyTable[ propConsumedTime ]
 						local elapsedTime = propertyTable[ propElapsedTime ]
 						if remPhotos > 0 then
 							if #value > 0 then
@@ -545,6 +556,7 @@ local function showResponse( propertyTable )
 				action = function()
 					LrTasks.startAsyncTask(
 						function()
+							savePhoto( propertyTable, propertyTable[ propCurrentPhotoIndex ])
 							local photo = propertyTable[ propPhotos ][ propertyTable[ propCurrentPhotoIndex ] ]
 							applyKeywordsToPhoto( photo.photo, photo.labels, photo.landmarks )
 						end
@@ -558,6 +570,7 @@ local function showResponse( propertyTable )
 				action = function()
 					LrTasks.startAsyncTask(
 						function()
+							savePhoto( propertyTable, propertyTable[ propCurrentPhotoIndex ])
 							for _, photo in ipairs( propertyTable[ propPhotos ] ) do
 								applyKeywordsToPhoto( photo.photo, photo.labels, photo.landmarks )
 							end
