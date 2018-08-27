@@ -13,7 +13,7 @@ Adds menu items to Lightroom.
 ------------------------------------------------------------------------------]]
 
 return {
-	
+
 	LrSdkVersion = 5.0,
 	LrSdkMinimumVersion = 5.0, -- minimum SDK version required by this plug-in
 
@@ -25,9 +25,9 @@ return {
 
 	LrInitPlugin = "RoboTaggerInit.lua",
 	LrShutdownPlugin = "RoboTaggerShutdown.lua",
-	
+
 	-- Add the menu item to the File menu.
-	
+
 	LrExportMenuItems = {
 		{
 			title = LOC( "$$$/RoboTagger/LibraryMenuItem=Tag Photos with Google Vision" ),
@@ -37,7 +37,7 @@ return {
 	},
 
 	-- Add the menu item to the Library menu.
-	
+
 	LrLibraryMenuItems = {
 		{
 			title = LOC( "$$$/RoboTagger/LibraryMenuItem=Tag Photos with Google Vision" ),
@@ -46,6 +46,6 @@ return {
 		},
 	},
 
-	VERSION = { major = 1, minor = 0, revision = 0, build = 1, },
+	VERSION = { major = 1, minor = 1, revision = 0, build = 1, },
 
 }
