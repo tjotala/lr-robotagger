@@ -1,6 +1,6 @@
 require 'rake/clean'
 
-LUAC = "luac5.1"
+LUAC = "luac"
 ZIP = "zip"
 
 BUILD_DIR = "build"
@@ -25,7 +25,11 @@ directory DIST_DIR
 CLOBBER << DIST_DIR
 
 desc "Compile source files"
-task :compile => PLUGIN_DIR
+task :compile => [ :test, PLUGIN_DIR ]
+
+task :test do
+  sh "#{LUAC} -v | grep 5.1"
+end
 
 SOURCE_FILES.each do |src|
 	tgt = src.pathmap(File.join(PLUGIN_DIR, "%f"))
