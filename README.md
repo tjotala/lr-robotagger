@@ -4,6 +4,8 @@
 
 This plug-in will take all the selected photos and upload their thumbnails to Google Vision for analysis. It will then allow you to attach the selected labels and landmarks as keywords to the photo in your Lightroom catalog.
 
+See [other plug-ins](https://github.com/tjotala/lightroom-plugins).
+
 ## Installation
 
 1. Download the `dist/robotagger.zip` distribution package
