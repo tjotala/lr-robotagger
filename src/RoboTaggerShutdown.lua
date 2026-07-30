@@ -1,7 +1,8 @@
 --[[----------------------------------------------------------------------------
 
  RoboTagger
- Copyright 2017 Tapani Otala
+ Copyright 2017-2024 Tapani Otala
+ Updated for Lightroom Classic 2024
 
 --------------------------------------------------------------------------------
 
@@ -14,4 +15,4 @@ require "Logger"
 
 --------------------------------------------------------------------------------
 
-logger:tracef( "RoboTagger: shutdown" )
+logger:tracef( "RoboTagger v2.0: shutdown" )

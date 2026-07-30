@@ -1,7 +1,8 @@
 --[[----------------------------------------------------------------------------
 
  Automatically Tag Photos using Google Vision API
- Copyright 2017 Tapani Otala
+ Copyright 2017-2024 Tapani Otala
+ Updated for Lightroom Classic 2024
 
 --------------------------------------------------------------------------------
 
@@ -14,13 +15,13 @@ Adds menu items to Lightroom.
 
 return {
 
-	LrSdkVersion = 5.0,
-	LrSdkMinimumVersion = 5.0, -- minimum SDK version required by this plug-in
+	LrSdkVersion = 13.0,
+	LrSdkMinimumVersion = 10.0, -- minimum SDK version required by this plug-in
 
 	LrToolkitIdentifier = "com.tjotala.lightroom.robotagger",
 
 	LrPluginName = LOC( "$$$/RoboTagger/PluginName=RoboTagger" ),
-	LrPluginInfoUrl = "https://github.com/tjotala/lr-robotagger",
+	LrPluginInfoUrl = "https://github.com/obelix74/lr-robotagger",
 	LrPluginInfoProvider = "RoboTaggerInfoProvider.lua",
 
 	LrInitPlugin = "RoboTaggerInit.lua",
@@ -46,6 +47,6 @@ return {
 		},
 	},
 
-	VERSION = { major = 1, minor = 1, revision = 0, build = 1, },
+	VERSION = { major = 2, minor = 0, revision = 0, build = 1, },
 
 }

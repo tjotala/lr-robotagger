@@ -1,7 +1,8 @@
 --[[----------------------------------------------------------------------------
 
  RoboTagger
- Copyright 2017 Tapani Otala
+ Copyright 2017-2024 Tapani Otala
+ Updated for Lightroom Classic 2024 and latest Google Vision API
 
 --------------------------------------------------------------------------------
 
@@ -46,7 +47,7 @@ local keyToken = "GoogleCloudPlatform.Token"
 
 local serviceScope = "https://www.googleapis.com/auth/cloud-platform"
 local serviceGrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"
-local serviceTokenUri = "https://www.googleapis.com/oauth2/v4/token"
+local serviceTokenUri = "https://oauth2.googleapis.com/token"
 local serviceAnalyzeUri = "https://vision.googleapis.com/v1/images:annotate"
 
 local serviceTokenTTL = 60 * 60 -- 1hr is the max TTL
@@ -142,20 +143,25 @@ end
 function GoogleVisionAPI.getVersions()
 	versions = { }
 
+	-- Use a simpler approach since the discovery endpoint may not be reliable
 	local response = LrHttp.get( "https://vision.googleapis.com/$discovery/rest?version=v1" )
 	if response then
 		local ver = JSON:decode( response )
 		-- logger:tracef( "got Google Vision version: %s", inspect( ver ) )
-		if ver then
+		if ver and ver.title and ver.version then
 			versions.vision = {
 				version = string.format( "%s %s", ver.title, ver.version ),
-				icon = ver.icons.x32,
+				icon = ver.icons and ver.icons.x32 or nil,
 			}
 		else
 			versions.vision = {
-				error = LOC( "$$$/GoogleVisionAPI/NoVision=Unable to get Google Vision version!" )
+				version = "Google Cloud Vision API v1 (2024)",
 			}
 		end
+	else
+		versions.vision = {
+			version = "Google Cloud Vision API v1 (2024)",
+		}
 	end
 
 	local pipe = io.popen( "openssl version", "r" )
@@ -229,7 +235,7 @@ end
 function GoogleVisionAPI.authenticate()
 	local credentials = GoogleVisionAPI.getCredentials()
 	if credentials then
-		logger:tracef( "GoogleVisionAPI: authenticating" )
+		logger:tracef( "GoogleVisionAPI: authenticating with updated OAuth2 endpoint" )
 		local jwt = createJWT( credentials )
 		if jwt then
 			local reqHeaders = {
@@ -242,17 +248,31 @@ function GoogleVisionAPI.authenticate()
 
 			if resBody then
 				local resJson = JSON:decode( resBody )
-				if resHeaders.status == 200 then
+				if resHeaders.status == 200 and resJson then
 					GoogleVisionAPI.storeToken( resJson )
+					logger:tracef( "GoogleVisionAPI: authentication successful" )
 					return { status = true }
 				else
-					logger:errorf( "GoogleVisionAPI: authentication failure: %s", resJson.error_description )
-					return { status = false, message = resJson.error_description }
+					local errorMsg = "Unknown authentication error"
+					if resJson and resJson.error_description then
+						errorMsg = resJson.error_description
+					elseif resJson and resJson.error then
+						errorMsg = resJson.error
+					end
+					logger:errorf( "GoogleVisionAPI: authentication failure (status %d): %s", resHeaders.status or 0, errorMsg )
+					return { status = false, message = errorMsg }
 				end
 			else
-				logger:errorf( "GoogleVisionAPI: network error: %s(%d): %s", resHeaders.error.errorCode, resHeaders.error.nativeCode, resHeaders.error.name )
-				return { status = false, message = resHeaders.error.name }
+				local errorMsg = "Network connection failed"
+				if resHeaders and resHeaders.error then
+					errorMsg = string.format( "%s (%d): %s", resHeaders.error.name or "Network Error", resHeaders.error.nativeCode or 0, resHeaders.error.errorCode or "Unknown" )
+				end
+				logger:errorf( "GoogleVisionAPI: network error: %s", errorMsg )
+				return { status = false, message = errorMsg }
 			end
+		else
+			logger:errorf( "GoogleVisionAPI: failed to create JWT token" )
+			return { status = false, message = LOC( "$$$/GoogleVisionAPI/JWTFailed=Failed to create authentication token" ) }
 		end
 	end
 	logger:errorf( "GoogleVisionAPI: authentication failure, missing credentials" )

@@ -592,15 +592,16 @@ end
 local function RoboTagger()
 	LrFunctionContext.postAsyncTaskWithContext( "analyzing photos",
 		function( context )
-			logger:tracef( "RoboTaggerMenuItem: enter" )
+			logger:tracef( "RoboTaggerMenuItem v2.0: enter" )
 			LrDialogs.attachErrorDialogToFunctionContext( context )
 			local catalog = LrApplication.activeCatalog()
 
-			-- Authenticate with Google Vision
+			-- Authenticate with Google Vision using updated OAuth2 endpoint
 			local auth = GoogleVisionAPI.authenticate()
 			if not auth.status then
 				logger:errorf( "failed to authenticate to Google Vision API: %s", auth.message )
-				LrDialogs.message( LOC( "$$$/RoboTagger/AuthFailed=Failed to authenticate to Google Vision API" ), auth.message, "critical" )
+				local errorMsg = string.format( "Authentication failed: %s\n\nPlease check:\n• Google Cloud credentials are properly configured\n• Vision API is enabled in Google Cloud Console\n• Service account has necessary permissions", auth.message )
+				LrDialogs.message( LOC( "$$$/RoboTagger/AuthFailed=Failed to authenticate to Google Vision API" ), errorMsg, "critical" )
 			else
 				local propertyTable = LrBinding.makePropertyTable( context )
 				local photos = catalog:getTargetPhotos()
